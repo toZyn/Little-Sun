@@ -6,8 +6,6 @@
   nodejs,
 }:
 {
-  package = pi;
-
   smoke =
     pkgs.runCommand "pi-smoke-test"
       {
@@ -51,6 +49,14 @@
         node scripts/check-pinned-deps.mjs
         node scripts/check-entry-graphs.mjs
         node scripts/generate-coding-agent-install-lock.mjs --check
+
+        # Keep the packaged Biome on the version the repository formats with.
+        pinned="$(node -p "require('${source}/package.json').devDependencies['@biomejs/biome']")"
+        if [ "$pinned" != "${pkgs.biome.version}" ]; then
+          echo "nix/biome.nix has biome ${pkgs.biome.version}, package.json pins $pinned" >&2
+          exit 1
+        fi
+
         touch $out
       '';
 }
